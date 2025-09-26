@@ -127,11 +127,6 @@ def preview_cropped_frames(video_path, x=None, y=None, width=None, height=None):
     except Exception as e:
         st.error(f"预览帧失败 / Failed to preview frame: {str(e)}")
 
-# 保持原有函数名称的兼容性
-def preview_video_frame(video_path, x=None, y=None, width=None, height=None):
-    """保持向后兼容的函数"""
-    return preview_original_frame(video_path, x, y, width, height)
-
 def crop_video_files(folder_path, selected_files, start_time, duration, target_size=None, target_fps=None):
     """
     裁剪选定的视频文件
@@ -237,39 +232,6 @@ def crop_video_files(folder_path, selected_files, start_time, duration, target_s
             continue
             
     st.success("所有视频裁剪完成 / All videos cropped successfully")
-
-def extract_specific_frames(video_path):
-    """提取视频的第一帧、中间帧和最后一帧
-    Extract the first, middle, and last frames of a video
-    
-    Args:
-        video_path (str): 视频文件路径
-        
-    Returns:
-        list: 包含三个帧的列表
-    """
-    cap = cv2.VideoCapture(video_path)
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frames = []
-    
-    for count in [0, frame_count // 2, frame_count - 1]:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, count)
-        ret, frame = cap.read()
-        if ret:
-            frames.append(frame)
-    cap.release()
-    return frames
-
-def display_frames(frames):
-    """在Streamlit中并排显示帧
-    Display frames side by side in Streamlit
-    
-    Args:
-        frames (list): 要显示的帧列表
-    """
-    cols = st.columns(len(frames))
-    for col, frame in zip(cols, frames):
-        col.image(frame, channels="BGR", use_container_width=True)
 
 def create_extract_script(video_path: str, x: int, y: int, width: int, height: int, start: float, end: float, output_directory: str, deviceID: int = 0) -> str:
     """生成使用GPU的视频裁剪脚本

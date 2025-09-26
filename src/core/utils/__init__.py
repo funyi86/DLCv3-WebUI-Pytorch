@@ -8,8 +8,7 @@ from .file_utils import (
     select_python_files
 )
 
-from .gpu_utils import display_gpu_usage
-from .gpu_selector import setup_gpu_selection
+from src.core.gpu import display_gpu_usage, setup_gpu_selection
 from .execute_selected_scripts import execute_selected_scripts, fetch_last_lines_of_logs
 
 __all__ = [

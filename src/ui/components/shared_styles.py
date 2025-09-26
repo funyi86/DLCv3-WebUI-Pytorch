@@ -70,6 +70,46 @@ def load_custom_css():
             border-radius: 0.5rem;
             margin-bottom: 1rem;
         }
+
+        /* Dark mode overrides: force white text in sidebar */
+        @media (prefers-color-scheme: dark) {
+            [data-testid="stSidebar"] { color: #ffffff !important; }
+            [data-testid="stSidebar"] .sidebar-title,
+            [data-testid="stSidebar"] .sidebar-link,
+            [data-testid="stSidebar"] .stButton button,
+            [data-testid="stSidebar"] .user-info,
+            [data-testid="stSidebar"] .stMarkdown,
+            [data-testid="stSidebar"] label,
+            [data-testid="stSidebar"] p,
+            [data-testid="stSidebar"] span {
+                color: #ffffff !important;
+            }
+            [data-testid="stSidebar"] .sidebar-divider {
+                border-top-color: rgba(255,255,255,0.2) !important;
+            }
+            [data-testid="stSidebar"] .user-info {
+                background-color: rgba(255,255,255,0.06) !important;
+            }
+        }
+
+        /* Streamlit theme attribute (explicit dark theme) */
+        [data-theme="dark"] [data-testid="stSidebar"] { color: #ffffff !important; }
+        [data-theme="dark"] [data-testid="stSidebar"] .sidebar-title,
+        [data-theme="dark"] [data-testid="stSidebar"] .sidebar-link,
+        [data-theme="dark"] [data-testid="stSidebar"] .stButton button,
+        [data-theme="dark"] [data-testid="stSidebar"] .user-info,
+        [data-theme="dark"] [data-testid="stSidebar"] .stMarkdown,
+        [data-theme="dark"] [data-testid="stSidebar"] label,
+        [data-theme="dark"] [data-testid="stSidebar"] p,
+        [data-theme="dark"] [data-testid="stSidebar"] span {
+            color: #ffffff !important;
+        }
+        [data-theme="dark"] [data-testid="stSidebar"] .sidebar-divider {
+            border-top-color: rgba(255,255,255,0.2) !important;
+        }
+        [data-theme="dark"] [data-testid="stSidebar"] .user-info {
+            background-color: rgba(255,255,255,0.06) !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -97,6 +137,16 @@ def render_user_info():
 def render_sidebar():
     """渲染统一的侧边栏导航 / Render unified sidebar navigation"""
     with st.sidebar:
+        # helper for navigation: use page_link if available, else fallback to button+switch_page
+        def _nav(label: str, page_path: str):
+            if hasattr(st, "page_link"):
+                try:
+                    st.page_link(page=page_path, label=label)
+                    return
+                except Exception:
+                    pass
+            if st.button(label, use_container_width=True):
+                st.switch_page(page_path)
         # 如果用户已登录，显示用户信息
         if st.session_state.get("authentication_status"):
             render_user_info()
@@ -104,34 +154,26 @@ def render_sidebar():
         
         # 主页导航
         st.markdown('<div class="sidebar-title">🏠 主页 / Home</div>', unsafe_allow_html=True)
-        if st.button("🏠 主页 / Home"):
-            st.switch_page("Home.py")
+        _nav("🏠 主页 / Home", "Home.py")
         st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-        
-        # 视频处理导航
+
+        # 视频处理导航（可折叠）
         st.markdown('<div class="sidebar-title">🎥 视频处理 / Video Processing</div>', unsafe_allow_html=True)
-        if st.button("📽️ 视频预处理 / Video Preparation"):
-            st.switch_page("pages/7_Video_Preparation.py")
-        if st.button("✂️ 视频裁剪 / Video Crop"):
-            st.switch_page("pages/8_Video_Crop.py")
+        with st.expander("视频预处理与裁剪 / Preprocess & Crop", expanded=False):
+            _nav("📽️ 视频预处理 / Video Preparation", "pages/7_Video_Preparation.py")
+            _nav("✂️ 视频裁剪 / Video Crop", "pages/8_Video_Crop.py")
         st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-        
-        # 行为分析导航
+
+        # 行为分析导航（可折叠）
         st.markdown('<div class="sidebar-title">🔍 行为分析 / Behavior Analysis</div>', unsafe_allow_html=True)
-        if st.button("🐁 小鼠抓挠 / Mouse Scratch"):
-            st.switch_page("pages/1_Mouse_Scratch.py")
-        if st.button("🐁 小鼠理毛 / Mouse Grooming"):
-            st.switch_page("pages/2_Mouse_Grooming.py")
-        if st.button("🐁 小鼠游泳 / Mouse Swimming"):
-            st.switch_page("pages/3_Mouse_Swimming.py")
-        if st.button("🏠 三箱实验 / Three Chamber"):
-            st.switch_page("pages/4_Three_Chamber.py")
-        if st.button("👥 两鼠社交 / Two Social"):
-            st.switch_page("pages/5_Two_Social.py")
-        if st.button("📍 位置偏好 / Mouse CPP"):
-            st.switch_page("pages/6_Mouse_CPP.py")
-        if st.button("🎯 抓取行为 / Mouse Catch"):
-            st.switch_page("pages/9_Mouse_Catch.py")
+        with st.expander("选择分析类型 / Select analysis type", expanded=True):
+            _nav("🐁 小鼠抓挠 / Mouse Scratch", "pages/1_Mouse_Scratch.py")
+            _nav("🐁 小鼠理毛 / Mouse Grooming", "pages/2_Mouse_Grooming.py")
+            _nav("🐁 小鼠游泳 / Mouse Swimming", "pages/3_Mouse_Swimming.py")
+            _nav("🏠 三箱实验 / Three Chamber", "pages/4_Three_Chamber.py")
+            _nav("👥 两鼠社交 / Two Social", "pages/5_Two_Social.py")
+            _nav("📍 位置偏好 / Mouse CPP", "pages/6_Mouse_CPP.py")
+            _nav("🎯 抓取行为 / Mouse Catch", "pages/9_Mouse_Catch.py")
             
         # 如果用户已登录，显示登出按钮
         if st.session_state.get("authentication_status"):

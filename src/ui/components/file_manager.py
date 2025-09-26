@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 from src.core.utils.file_utils import (
-    create_folder_if_not_exists,
     list_directories,
     upload_files,
     select_video_files

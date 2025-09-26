@@ -5,8 +5,8 @@ from src.core.config import get_root_path, get_data_path, get_models_path
 from src.core.helpers.analysis_helper import create_and_start_analysis, fetch_last_lines_of_logs
 from src.core.helpers.download_utils import filter_and_zip_files
 from src.core.processing.mouse_scratch_video_processing import process_scratch_files
-from src.core.utils.gpu_utils import display_gpu_usage
-from src.core.utils.gpu_selector import setup_gpu_selection
+from src.core.gpu.gpu_utils import display_gpu_usage
+from src.core.gpu.gpu_selector import setup_gpu_selection
 
 # 导入共享组件
 from src.ui.components import load_custom_css, render_sidebar, show_gpu_status, setup_working_directory

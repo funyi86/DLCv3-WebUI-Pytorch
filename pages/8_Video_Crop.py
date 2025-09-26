@@ -22,7 +22,6 @@ from src.core.config import get_root_path, get_data_path
 from src.core.helpers.video_helper import (
     crop_video_files,
     get_video_info,
-    preview_video_frame,
     preview_original_frame,
     preview_cropped_frames,
     create_extract_script,
@@ -31,9 +30,8 @@ from src.core.helpers.video_helper import (
 )
 from src.core.helpers.download_utils import filter_and_zip_files
 from src.ui.components import render_sidebar, load_custom_css, setup_working_directory
-from src.core.utils.gpu_utils import display_gpu_usage
-from src.core.utils.gpu_selector import setup_gpu_selection
-from src.core.utils.file_utils import create_folder_if_not_exists, select_python_files
+from src.core.gpu.gpu_utils import display_gpu_usage
+from src.core.gpu.gpu_selector import setup_gpu_selection
 from src.core.utils.execute_selected_scripts import execute_selected_scripts, fetch_last_lines_of_logs
 
 # 设置页面配置

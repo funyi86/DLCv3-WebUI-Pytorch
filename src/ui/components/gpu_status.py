@@ -1,6 +1,6 @@
 import streamlit as st
-from src.core.utils.gpu_utils import display_gpu_usage
-from src.core.utils.gpu_selector import setup_gpu_selection
+from src.core.gpu.gpu_utils import display_gpu_usage
+from src.core.gpu.gpu_selector import setup_gpu_selection
 
 def show_gpu_status():
     """显示GPU状态和选择器 / Display GPU status and selector"""

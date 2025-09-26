@@ -24,27 +24,3 @@ pip install git+https://github.com/DeepLabCut/DeepLabCut.git@pytorch_dlc#egg=dee
 
 python -m deeplabcut 成功运行
 
-
-
-
-ubuntu：
-
-conda config --add channels conda-forge
-
-conda create -n DLCv3-WebUI python=3.10
-
-conda activate DLCv3-WebUI
-
-conda install nvidia/label/cuda-12.4.1::cuda-toolkit
-
-pip3 install torch torchvision torchaudio
-
-conda install -c conda-forge pytables==3.8.0
-
-pip uninstall numpy
-
-pip install git+https://github.com/DeepLabCut/DeepLabCut.git@pytorch_dlc#egg=deeplabcut[gui,modelzoo,wandb]
-
-python -c "import deeplabcut" #检查无报错
-
-pip install streamlit GPUtil streamlit-authenticator ffmpeg

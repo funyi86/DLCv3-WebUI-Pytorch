@@ -1,28 +1,29 @@
-import GPUtil
 import streamlit as st
+import GPUtil
 
 def setup_gpu_selection():
     """
-    Detects GPUs using GPUtil and sets up GPU selection in Streamlit.
-    Returns the total count of GPUs and a list of selected GPU indices.
+    设置GPU选择界面，返回GPU数量和选择的GPU列表
+    Set up GPU selection interface, return GPU count and selected GPU list
     """
-    # Attempt to detect GPUs using GPUtil
     gpus = GPUtil.getGPUs()
-    num_gpus = len(gpus)  # Get the number of GPUs available
-
-    if num_gpus > 1:
-        st.write(f"{num_gpus} GPUs detected in the system.")
-        # Allow the user to specify how many GPUs they want to use
-        gpu_count = st.number_input('Enter the number of GPUs available', min_value=1, value=2, max_value=num_gpus)
-        # Allow the user to select specific GPUs (index-based)
-        use_gpus = st.multiselect('Select GPUs to use', options=range(num_gpus), default=list(range(gpu_count)))
-    elif num_gpus == 1:
-        st.write("1 GPU detected in the system.")
-        gpu_count = 1
-        use_gpus = [0]  # Only one GPU available
-    else:
-        st.write("No GPUs detected in the system.")
-        gpu_count = 0
-        use_gpus = []
-
-    return gpu_count, use_gpus
+    gpu_count = len(gpus)
+    
+    if gpu_count == 0:
+        st.warning("⚠️ 未检测到GPU / No GPU detected")
+        return 0, []
+        
+    # 创建GPU选择选项
+    gpu_options = [f"GPU {i}" for i in range(gpu_count)]
+    selected_gpus = st.multiselect(
+        "选择要使用的GPU / Select GPUs to use",
+        range(gpu_count),
+        default=list(range(gpu_count)),
+        format_func=lambda x: f"GPU {x}"
+    )
+    
+    if not selected_gpus:
+        st.warning("⚠️ 请至少选择一个GPU / Please select at least one GPU")
+        return gpu_count, []
+        
+    return gpu_count, selected_gpus 
