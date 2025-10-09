@@ -1,2 +1,5 @@
 2025-02-08 11:35:49,879 - numexpr.utils - INFO - NumExpr defaulting to 4 threads.
 2025-02-08 11:42:36,498 - numexpr.utils - INFO - NumExpr defaulting to 4 threads.
+2025-09-25 17:59:33,376 - root - INFO - 2025-09-25 17:59:33 - Liangyu Guan - view_home
+2025-09-25 19:40:33,434 - numexpr.utils - INFO - Note: NumExpr detected 36 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2025-09-25 19:40:33,435 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
