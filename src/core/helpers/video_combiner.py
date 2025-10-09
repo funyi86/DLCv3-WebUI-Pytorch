@@ -1,19 +1,20 @@
 import os
+from typing import List, Optional
 import streamlit as st
 
-def create_video_combination_script(folder_path: str, selected_files: list, output_directory: str, output_filename: str = "combined_video.mp4") -> str:
+def create_video_combination_script(folder_path: str, selected_files: List[str], output_directory: str, output_filename: str = "combined_video.mp4") -> Optional[str]:
     """
     创建视频合并脚本
     Create video combination script
     
     Args:
         folder_path (str): 视频文件所在目录
-        selected_files (list): 选定的视频文件列表（完整路径）
+        selected_files (List[str]): 选定的视频文件列表（完整路径）
         output_directory (str): 输出目录
         output_filename (str, optional): 输出文件名，默认为"combined_video.mp4"
         
     Returns:
-        str: 脚本文件路径
+        Optional[str]: 脚本文件路径（失败时返回 None）
     """
     try:
         # 确保输出目录存在

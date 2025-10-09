@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 import traceback
-from typing import Tuple
+from typing import Dict, Tuple
 
 class SocialBehaviorAnalyzer:
     def __init__(self, 
@@ -85,7 +85,7 @@ class SocialBehaviorAnalyzer:
         scorer = df.columns.levels[0][0]  # 获取scorer名称
         
         # 2. 提取和处理每个关键点的数据
-        data = {}
+        data: Dict[str, Dict[str, Dict[str, np.ndarray]]] = {}
         for individual in ['individual1', 'individual2']:
             data[individual] = {}
             for bp in ['Mouth', 'left-ear', 'right-ear']:

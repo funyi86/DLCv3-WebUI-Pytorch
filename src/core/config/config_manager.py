@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 import yaml
 from yaml.loader import SafeLoader
 import streamlit as st
@@ -36,8 +36,11 @@ def load_config(file_path: str) -> Optional[Dict[str, Any]]:
             return None
             
         with open(file_path, 'r', encoding='utf-8') as file:
-            config = yaml.safe_load(file)
-            return config
+            config_data = yaml.safe_load(file)
+
+        if isinstance(config_data, dict):
+            return cast(Dict[str, Any], config_data)
+        return None
     except FileNotFoundError:
         return None
     except yaml.YAMLError as e:

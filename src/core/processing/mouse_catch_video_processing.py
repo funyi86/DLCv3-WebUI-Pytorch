@@ -9,6 +9,8 @@ import time
 import traceback
 from matplotlib.ticker import FuncFormatter
 from scipy.interpolate import interp1d
+from typing import Optional
+
 from .trajectory_processing import (
     filter_low_likelihood,
     filter_extreme_jumps,
@@ -23,7 +25,7 @@ from .trajectory_processing import (
 
 def process_mouse_catch_video(
     video_path: str,
-    csv_path: str = None,
+    csv_path: Optional[str] = None,
     threshold: float = 0.6,
     speed_threshold: float = 100.0,  # 速度阈值参数，单位：像素/帧
     min_duration_sec: float = 0.5,   # 最小持续时间，默认0.5秒

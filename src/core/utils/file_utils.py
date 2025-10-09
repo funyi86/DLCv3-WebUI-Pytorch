@@ -21,7 +21,7 @@ def create_new_folder(folder_path: str) -> bool:
         st.error(f"创建文件夹失败 / Failed to create folder: {str(e)}")
         return False
 
-def upload_files(folder_path: str) -> None:
+def upload_files(folder_path: str) -> List[str]:
     """处理文件上传
     Handle file upload
     
@@ -34,15 +34,19 @@ def upload_files(folder_path: str) -> None:
             accept_multiple_files=True,
             type=['mp4']
         )
-        
+        saved_files: List[str] = []
+
         if uploaded_files:
             for uploaded_file in uploaded_files:
                 file_path = os.path.join(folder_path, uploaded_file.name)
-                with open(file_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
+                with open(file_path, "wb") as file_handle:
+                    file_handle.write(uploaded_file.getbuffer())
+                saved_files.append(file_path)
                 st.success(f"文件上传成功 / File uploaded successfully: {uploaded_file.name}")
+        return saved_files
     except Exception as e:
         st.error(f"文件上传失败 / Failed to upload files: {str(e)}")
+        return []
 
 def list_directories(root_directory: str) -> List[str]:
     """列出目录下的所有子目录

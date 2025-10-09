@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
+from typing import Any, Dict, List, Optional
 from collections import Counter
 import time
 import traceback
@@ -481,11 +482,19 @@ def analyze_bout_duration(
     return results
 
 
-def can_merge_behavior(social_frames: dict, start_idx: int, prev_behavior: str, gap_frames: int) -> bool:
+def can_merge_behavior(
+    social_frames: dict,
+    start_idx: int,
+    prev_behavior: Optional[str],
+    gap_frames: int
+) -> bool:
+    if prev_behavior is None:
+        return False
+
     valid_frames = social_frames['valid_frames']
     social_types = social_frames['social_types']
     n = len(valid_frames)
-    
+
     end_search = min(start_idx + gap_frames, n)
     for j in range(start_idx, end_search):
         if valid_frames[j] and social_types[j] == prev_behavior:
@@ -496,13 +505,13 @@ def can_merge_behavior(social_frames: dict, start_idx: int, prev_behavior: str, 
 def close_bout_if_valid(
     bout_start: int,
     bout_end: int,
-    behavior: str,
+    behavior: Optional[str],
     mouse_distance: np.ndarray,
     mouse1_angle: np.ndarray,
     mouse2_angle: np.ndarray,
     min_duration_frames: int,
     fps: float
-) -> list:
+) -> List[Dict[str, Any]]:
     """
     检查并关闭一个行为片段，如果其持续时间大于等于最小持续时间则返回结果
     
@@ -516,6 +525,9 @@ def close_bout_if_valid(
         min_duration_frames: 最小持续帧数
         fps: 帧率
     """
+    if behavior is None:
+        return []
+
     duration = bout_end - bout_start
     if duration >= min_duration_frames:
         last_idx = bout_end - 1
@@ -703,7 +715,7 @@ def plot_analysis_results(
         
         # 创建自定义颜色映射
         from matplotlib.colors import LinearSegmentedColormap
-        colors = [
+        heatmap_colors = [
             (1, 1, 1, 0),          # 完全透明的白色作为背景
             (0.6, 0.6, 1, 0.3),    # 淡紫色，用于低热力区
             (0, 0.6, 1, 0.4),      # 天蓝色
@@ -713,7 +725,7 @@ def plot_analysis_results(
             (1, 0, 0, 1)           # 红色
         ]
         n_bins = 256  # 颜色分级数
-        cmap = LinearSegmentedColormap.from_list("custom", colors, N=n_bins)
+        cmap = LinearSegmentedColormap.from_list("custom", heatmap_colors, N=n_bins)
         
         # Mouse 1热力图
         hist1_smooth = create_smooth_heatmap(
