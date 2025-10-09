@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,13 +32,45 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[dev]
 
-      - name: Verify formatting
+      - name: Determine Python files to check
+        id: pyfiles
         run: |
-          black --check .
-          isort . --check-only
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }} --depth=1
+            BASE="origin/${{ github.base_ref }}"
+            RANGE="$BASE...HEAD"
+          else
+            if git rev-parse HEAD~1 >/dev/null 2>&1; then
+              RANGE="HEAD~1...HEAD"
+            else
+              RANGE="HEAD"
+            fi
+          fi
+
+          if [ "$RANGE" = "HEAD" ]; then
+            CHANGED=$(git ls-files '*.py')
+          else
+            CHANGED=$(git diff --name-only "$RANGE" -- '*.py')
+          fi
+
+          echo "Changed python files:\n$CHANGED"
+
+          if [ -z "$CHANGED" ]; then
+            echo "files=" >> "$GITHUB_OUTPUT"
+          else
+            CHANGED_ONELINE=$(echo "$CHANGED" | tr '\n' ' ')
+            echo "files=$CHANGED_ONELINE" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify formatting
+        if: steps.pyfiles.outputs.files != ''
+        run: |
+          black --check ${{ steps.pyfiles.outputs.files }}
+          isort ${{ steps.pyfiles.outputs.files }} --check-only
 
       - name: Lint with flake8
-        run: flake8
+        if: steps.pyfiles.outputs.files != ''
+        run: flake8 ${{ steps.pyfiles.outputs.files }}
 
       - name: Type check with mypy
         run: mypy src
