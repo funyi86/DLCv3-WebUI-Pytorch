@@ -55,11 +55,12 @@ jobs:
 
           echo "Changed python files:\n$CHANGED"
 
-          if [ -z "$CHANGED" ]; then
+          PY_FILES=$(printf '%s\n' "$CHANGED" | sed '/^__init__\.py$/d' | tr '\n' ' ')
+
+          if [ -z "$PY_FILES" ]; then
             echo "files=" >> "$GITHUB_OUTPUT"
           else
-            CHANGED_ONELINE=$(echo "$CHANGED" | tr '\n' ' ')
-            echo "files=$CHANGED_ONELINE" >> "$GITHUB_OUTPUT"
+            echo "files=$PY_FILES" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Verify formatting
