@@ -7,40 +7,42 @@ on:
     branches: [ main ]
 
 jobs:
-  build_and_test:
-    runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
-    defaults:
-      run:
-        shell: bash -l {0} # 确保 conda 环境在后续步骤中正确激活
+  quality:
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4 # 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Miniconda
-      uses: conda-incubator/setup-miniconda@v3 # 设置 Miniconda 环境
-      with:
-        python-version: 3.10 # 与 environment.yml 中的 Python 版本一致
-        environment-file: environment.yml # 指定环境配置文件
-        auto-activate-base: false # 我们不激活 base 环境
-        activate-environment: DLCv3-WebUI # 激活 environment.yml 中定义的环境名称
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
 
-    - name: Display Conda environment information
-      run: |
-        echo "CONDA_PREFIX: ${CONDA_PREFIX}"
-        conda info
-        conda list
-        python --version
-        pip list
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libsm6 libxext6
 
-    - name: Test DeepLabCut import and functionality
-      run: |
-        echo "Attempting to import deeplabcut..."
-        python -c "import deeplabcut; print(f'Successfully imported DeepLabCut version: {deeplabcut.__version__}')"
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .[dev]
 
-    # 以后您可以在这里添加其他步骤，例如代码风格检查 (linting) 或更全面的单元测试
-    # - name: Lint with Flake8 (Example)
-    #   run: |
-    #     # 假设 flake8 在您的 requirements.txt 中或通过 conda 安装
-    #     # flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics 
+      - name: Verify formatting
+        run: |
+          black --check .
+          isort . --check-only
+
+      - name: Lint with flake8
+        run: flake8
+
+      - name: Type check with mypy
+        run: mypy src
+
+      - name: Run tests
+        env:
+          PYTHONPATH: src
+        run: pytest --cov=src --cov-report=term-missing
