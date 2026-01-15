@@ -11,8 +11,20 @@
 - 双鼠社交固定 100px/45° 阈值且图表默认 30fps，跨相机设置需重新校准。
 - 抓取行为依赖固定 ROI 与 x 方向位移/速度，强依赖装置几何与拍摄角度。
 
+## 建议参数起点 / Suggested Parameters (Starting Points)
+以下为初次标定与回归测试的起始范围，建议先完成像素↔厘米标定，再以厘米或体长（BL）作为单位，并用人工标注数据校准。
+- 通用：关键点置信度阈值 0.90–0.95；缺失插值间隙 ≤0.3–0.5s；平滑窗口 5–10 帧。
+- 三箱 / Three-Chamber：按装置边界定义左/中/右 ROI；刺激区半径 2–3cm（或 0.5–1.0 BL）；最小停留 1s；统计进入次数与停留时长。
+- CPP：根据标定中线划分 drug/saline；可排除中线带宽 1 BL；使用全程有效帧统计；偏好指数 (Tdrug-Tsaline)/(Tdrug+Tsaline)。
+- 理毛 / Grooming：爪-口距离 <0.3–0.5 BL 且体躯移动 <0.5 BL/s；最小片段 0.5–1s；间隔合并 ≤0.2–0.3s。
+- 抓挠 / Scratch：爪部速度 >1–2 BL/s 且位移幅度 0.1–0.3 BL/帧；事件持续 ≥0.3s；频率参考 5–15 Hz（需以标注校准）。
+- 游泳 / Forced Swim：以质心速度判定不动；不动阈值 <0.1–0.2 BL/s 且持续 ≥1–2s；平滑窗口 0.3–0.5s。
+- 双鼠社交 / Two-Social：鼻-鼻或鼻-体距离 <2–4cm（或 0.5–1.0 BL）；朝向阈值 45–60°；最小片段 1–2s；间隔合并 ≤0.5s。
+- 抓取 / Catch：ROI 均以标定坐标定义；最小持续 0.1–0.3s；最小事件间隔 0.5–1.0s；轨迹距离与速度使用 2D 路径长度（cm/s）。
+
 ## 目录 / Table of Contents
 - [科学注意事项 / Scientific Notes (Read First)](#科学注意事项--scientific-notes-read-first)
+- [建议参数起点 / Suggested Parameters (Starting Points)](#建议参数起点--suggested-parameters-starting-points)
 - [概览 / Overview](#概览--overview)
 - [快速上手 / Quickstart](#快速上手--quickstart)
 - [功能矩阵 / Feature Matrix](#功能矩阵--feature-matrix)
