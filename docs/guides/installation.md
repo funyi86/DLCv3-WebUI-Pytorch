@@ -26,6 +26,27 @@ conda create -n dlc-webui python=3.9
 conda activate dlc-webui
 ```
 
+### macOS CPU-only（Apple Silicon）快速安装 / macOS CPU-only Quick Start
+适用于无 NVIDIA GPU 的 macOS 环境，CPU 可完整跑通分析流程（速度较慢）。
+```bash
+# 使用conda/miniforge创建环境 / Create environment with conda or miniforge
+conda create -n dlc-webui python=3.10
+conda activate dlc-webui
+
+# 安装 Apple Silicon 版 TensorFlow（CPU-only）
+python -m pip install -U pip
+python -m pip install "tensorflow-macos==2.12.*"
+
+# 安装项目依赖（基于 pyproject.toml）
+python -m pip install -e .
+
+# 生成本地配置 / Generate local config
+python scripts/init_config.py
+
+# 启动应用 / Start the app
+streamlit run Home.py
+```
+
 ### 2. 安装CUDA和cuDNN / Install CUDA and cuDNN
 - 从NVIDIA官网下载并安装CUDA / Download and install CUDA from NVIDIA website
 - 安装对应版本的cuDNN / Install corresponding cuDNN version
