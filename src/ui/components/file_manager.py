@@ -3,7 +3,9 @@ import os
 from src.core.utils.file_utils import (
     list_directories,
     upload_files,
-    select_video_files
+    select_video_files,
+    sanitize_filename,
+    safe_join
 )
 
 def setup_working_directory(root_directory: str):
@@ -42,16 +44,21 @@ def setup_working_directory(root_directory: str):
             col3, col4 = st.columns([1, 1])
             with col3:
                 if st.button("✅ 确认 / Confirm", use_container_width=True) and folder_name:
-                    new_folder_path = os.path.join(root_directory, folder_name)
+                    try:
+                        safe_folder_name = sanitize_filename(folder_name)
+                        new_folder_path = safe_join(root_directory, safe_folder_name)
+                    except ValueError:
+                        st.error(f"文件夹名称不合法 / Invalid folder name: {folder_name}")
+                        return None, None
                     try:
                         if not os.path.exists(new_folder_path):
                             os.makedirs(new_folder_path)
-                            st.success(f"创建文件夹成功 / Created folder: {folder_name}")
+                            st.success(f"创建文件夹成功 / Created folder: {safe_folder_name}")
                             st.session_state.folder_created = True
-                            st.session_state.current_folder = folder_name
+                            st.session_state.current_folder = safe_folder_name
                             st.rerun()
                         else:
-                            st.info(f"文件夹已存在 / Folder already exists: {folder_name}")
+                            st.info(f"文件夹已存在 / Folder already exists: {safe_folder_name}")
                     except Exception as e:
                         st.error(f"创建文件夹失败 / Failed to create folder: {str(e)}")
             with col4:
@@ -75,7 +82,11 @@ def setup_working_directory(root_directory: str):
         )
         
         if selected_directory:
-            folder_path = os.path.join(root_directory, selected_directory)
+            try:
+                folder_path = safe_join(root_directory, selected_directory)
+            except ValueError:
+                st.error("目录路径不合法 / Invalid directory path")
+                return None, None
             st.session_state.current_folder = selected_directory
             
             # 文件上传区域

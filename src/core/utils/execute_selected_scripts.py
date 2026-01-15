@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import streamlit as st
 from typing import List, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -21,7 +22,7 @@ def execute_script(script_path: str, working_directory: str, output_directory: s
     try:
         # 使用Python解释器执行脚本
         process = subprocess.Popen(
-            ['python', script_path],
+            [sys.executable, script_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,

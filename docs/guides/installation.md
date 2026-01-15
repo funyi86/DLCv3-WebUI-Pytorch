@@ -48,13 +48,12 @@ conda env create -f environment.yml
 ### 5. 配置设置 / Configure Settings
 1. 复制配置模板 / Copy configuration template
 ```bash
-cp config/config.example.yaml config/config.yaml
+python scripts/init_config.py
 ```
 
 2. 修改配置文件 / Modify configuration file
-- 设置数据目录 / Set data directory
-- 配置GPU设置 / Configure GPU settings
-- 设置用户认证 / Set up user authentication
+- 如需自定义用户名/邮箱，请重新运行脚本并传参 / Re-run the script with arguments to customize username/email
+- 如需使用自定义路径，设置 `DLC_WEBUI_CONFIG` 指向你的配置文件 / Set DLC_WEBUI_CONFIG for a custom path
 
 ## 验证安装 / Verify Installation
 

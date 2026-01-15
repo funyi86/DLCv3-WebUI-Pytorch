@@ -75,8 +75,8 @@ mypy src
 - 标注已知风险、后续计划或待办事项，帮助 reviewer 评估影响范围。
 
 ## 安全与配置 / Security & Configuration
-- 不要提交真实凭据或敏感数据：`config.yaml` 仅作示例，实际认证信息请使用环境变量或忽略文件存储。
-- `data/`、`models/`、`logs/` 默认在 `.gitignore` 内，保持仓库清洁。
+- 不要提交真实凭据或敏感数据：`src/core/config/config.yaml` 仅作示例，真实配置请放在 `src/core/config/config.local.yaml` 或通过环境变量引用（可运行 `python scripts/init_config.py` 生成）。
+- `data/`、`models/`、`logs/` 与 `config.local.yaml` 默认在 `.gitignore` 内，保持仓库清洁。
 - 引入新依赖时提供 CPU 兼容路径，并在 PR 描述说明验证方式。
 
 ## 发布与变更日志 / Releases & Changelog

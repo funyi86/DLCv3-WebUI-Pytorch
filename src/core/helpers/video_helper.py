@@ -2,8 +2,10 @@ import os
 import cv2
 import streamlit as st
 import tempfile
+import subprocess
 from datetime import timedelta
 import shutil
+from src.core.utils.file_utils import sanitize_filename, safe_join
 
 def get_video_info(video_path):
     """
@@ -16,6 +18,7 @@ def get_video_info(video_path):
     Returns:
         dict: 包含视频信息的字典
     """
+    cap = None
     try:
         cap = cv2.VideoCapture(video_path)
         
@@ -32,9 +35,6 @@ def get_video_info(video_path):
             
         duration = total_frames / fps
         
-        # 释放资源
-        cap.release()
-        
         return {
             'fps': fps,
             'width': frame_width,
@@ -46,6 +46,9 @@ def get_video_info(video_path):
     except Exception as e:
         st.error(f"获取视频信息失败 / Failed to get video info: {str(e)}")
         return None
+    finally:
+        if cap is not None:
+            cap.release()
 
 def preview_original_frame(video_path, x=None, y=None, width=None, height=None):
     """
@@ -62,6 +65,7 @@ def preview_original_frame(video_path, x=None, y=None, width=None, height=None):
     Returns:
         numpy.ndarray: 带裁剪框的原始帧图像
     """
+    cap = None
     try:
         cap = cv2.VideoCapture(video_path)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -75,10 +79,11 @@ def preview_original_frame(video_path, x=None, y=None, width=None, height=None):
             cv2.rectangle(frame_with_rect, (x, y), (x + width, y + height), (0, 255, 0), 2)
             frame_with_rect_rgb = cv2.cvtColor(frame_with_rect, cv2.COLOR_BGR2RGB)
             return frame_with_rect_rgb
-        
-        cap.release()
     except Exception as e:
         st.error(f"预览帧失败 / Failed to preview frame: {str(e)}")
+    finally:
+        if cap is not None:
+            cap.release()
     return None
 
 def preview_cropped_frames(video_path, x=None, y=None, width=None, height=None):
@@ -93,6 +98,7 @@ def preview_cropped_frames(video_path, x=None, y=None, width=None, height=None):
         width (int, optional): 裁剪宽度
         height (int, optional): 裁剪高度
     """
+    cap = None
     try:
         cap = cv2.VideoCapture(video_path)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -112,8 +118,17 @@ def preview_cropped_frames(video_path, x=None, y=None, width=None, height=None):
             if ret:
                 # 如果提供了裁剪参数，显示裁剪区域
                 if all(v is not None for v in [x, y, width, height]):
+                    frame_height, frame_width = frame.shape[:2]
+                    x0 = max(0, min(x, frame_width - 1))
+                    y0 = max(0, min(y, frame_height - 1))
+                    w0 = min(width, frame_width - x0)
+                    h0 = min(height, frame_height - y0)
+                    if w0 <= 0 or h0 <= 0:
+                        with preview_cols[idx]:
+                            st.warning("裁剪区域无效 / Invalid crop area")
+                        continue
                     # 裁剪并显示裁剪后的区域
-                    cropped_frame = frame[y:y+height, x:x+width]
+                    cropped_frame = frame[y0:y0+h0, x0:x0+w0]
                     cropped_frame_rgb = cv2.cvtColor(cropped_frame, cv2.COLOR_BGR2RGB)
                     with preview_cols[idx]:
                         st.image(cropped_frame_rgb, caption=name, use_container_width=True)
@@ -123,9 +138,11 @@ def preview_cropped_frames(video_path, x=None, y=None, width=None, height=None):
                     with preview_cols[idx]:
                         st.image(frame_rgb, caption=name, use_container_width=True)
         
-        cap.release()
     except Exception as e:
         st.error(f"预览帧失败 / Failed to preview frame: {str(e)}")
+    finally:
+        if cap is not None:
+            cap.release()
 
 def crop_video_files(folder_path, selected_files, start_time, duration, target_size=None, target_fps=None):
     """
@@ -146,6 +163,9 @@ def crop_video_files(folder_path, selected_files, start_time, duration, target_s
         os.makedirs(output_directory)
     
     for video_path in selected_files:
+        cap = None
+        out = None
+        temp_output = None
         try:
             # 显示处理进度
             st.write(f"正在处理 / Processing: {os.path.basename(video_path)}")
@@ -207,12 +227,22 @@ def crop_video_files(folder_path, selected_files, start_time, duration, target_s
                 progress_bar.progress(progress)
                 status_text.text(f"处理进度 / Progress: {progress}% ({frame_count}/{total_frames} frames)")
             
-            # 释放资源
-            cap.release()
-            out.release()
-            
             # 使用ffmpeg重新编码以确保兼容性
-            os.system(f'ffmpeg -i {temp_output} -c:v libx264 -preset medium -crf 23 {output_path}')
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-i",
+                    temp_output,
+                    "-c:v",
+                    "libx264",
+                    "-preset",
+                    "medium",
+                    "-crf",
+                    "23",
+                    output_path,
+                ],
+                check=True,
+            )
             os.remove(temp_output)
             
             st.success(f"视频裁剪完成 / Video cropped: {output_name}")
@@ -230,6 +260,16 @@ def crop_video_files(folder_path, selected_files, start_time, duration, target_s
         except Exception as e:
             st.error(f"视频裁剪失败 / Failed to crop video {video_path}: {str(e)}")
             continue
+        finally:
+            if cap is not None:
+                cap.release()
+            if out is not None:
+                out.release()
+            if temp_output and os.path.exists(temp_output):
+                try:
+                    os.remove(temp_output)
+                except OSError:
+                    pass
             
     st.success("所有视频裁剪完成 / All videos cropped successfully")
 
@@ -271,10 +311,28 @@ def create_extract_script(video_path: str, x: int, y: int, width: int, height: i
     output_full_path = output_full_path.replace('\\', '/')
     
     # 写入脚本内容
-    with open(script_path, 'w') as f:
-        f.write('import subprocess\n')
-        command = f"""subprocess.run(['ffmpeg', '-hwaccel', 'cuda', '-hwaccel_device', '{deviceID}', '-c:v', 'h264_cuvid', '-ss', '{start_time}', '-t', '{duration}', '-i', '{video_path}', '-vf', 'crop={width}:{height}:{x}:{y},fps=30', '-c:v', 'h264_nvenc', '-gpu', '{deviceID}', '-an', '{output_full_path}'], shell=True)"""
-        f.write(command + '\n')
+    with open(script_path, 'w', encoding='utf-8') as f:
+        f.write('import subprocess\n\n')
+        f.write(f"video_path = {video_path!r}\n")
+        f.write(f"output_path = {output_full_path!r}\n")
+        f.write(f"start_time = {start_time!r}\n")
+        f.write(f"duration = {duration!r}\n")
+        f.write(f"device_id = {deviceID}\n\n")
+        f.write("cmd = [\n")
+        f.write("    'ffmpeg',\n")
+        f.write("    '-hwaccel', 'cuda',\n")
+        f.write("    '-hwaccel_device', str(device_id),\n")
+        f.write("    '-c:v', 'h264_cuvid',\n")
+        f.write("    '-ss', start_time,\n")
+        f.write("    '-t', duration,\n")
+        f.write("    '-i', video_path,\n")
+        f.write(f"    '-vf', 'crop={width}:{height}:{x}:{y},fps=30',\n")
+        f.write("    '-c:v', 'h264_nvenc',\n")
+        f.write("    '-gpu', str(device_id),\n")
+        f.write("    '-an',\n")
+        f.write("    output_path,\n")
+        f.write("]\n")
+        f.write("subprocess.run(cmd, check=True)\n")
     
     return script_path
 
@@ -315,10 +373,23 @@ def create_extract_script_CPU(video_path: str, x: int, y: int, width: int, heigh
     output_full_path = output_full_path.replace('\\', '/')
     
     # 写入脚本内容
-    with open(script_path, 'w') as f:
-        f.write('import subprocess\n')
-        command = f"""subprocess.run(['ffmpeg', '-ss', '{start_time}', '-t', '{duration}', '-i', '{video_path}', '-vf', 'crop={width}:{height}:{x}:{y},fps=30', '-c:v', 'libx264', '-an', '{output_full_path}'], shell=True)"""
-        f.write(command + '\n')
+    with open(script_path, 'w', encoding='utf-8') as f:
+        f.write('import subprocess\n\n')
+        f.write(f"video_path = {video_path!r}\n")
+        f.write(f"output_path = {output_full_path!r}\n")
+        f.write(f"start_time = {start_time!r}\n")
+        f.write(f"duration = {duration!r}\n\n")
+        f.write("cmd = [\n")
+        f.write("    'ffmpeg',\n")
+        f.write("    '-ss', start_time,\n")
+        f.write("    '-t', duration,\n")
+        f.write("    '-i', video_path,\n")
+        f.write(f"    '-vf', 'crop={width}:{height}:{x}:{y},fps=30',\n")
+        f.write("    '-c:v', 'libx264',\n")
+        f.write("    '-an',\n")
+        f.write("    output_path,\n")
+        f.write("]\n")
+        f.write("subprocess.run(cmd, check=True)\n")
     
     return script_path
 
@@ -337,8 +408,13 @@ def move_selected_files(dest_folder_path, selected_files, source_folder_path):
     
     files_moved = 0
     for filename in selected_files:
-        src_path = os.path.join(source_folder_path, filename)
-        dest_path = os.path.join(dest_folder_path, filename)
+        try:
+            safe_name = sanitize_filename(filename)
+            src_path = safe_join(source_folder_path, safe_name)
+            dest_path = safe_join(dest_folder_path, safe_name)
+        except ValueError:
+            st.error(f"文件名不合法 / Invalid filename: {filename}")
+            continue
         shutil.move(src_path, dest_path)
         files_moved += 1
     

@@ -18,7 +18,7 @@ import time
 import json
 import glob
 from typing import List, Tuple, Dict, Any, Optional
-from src.core.config import get_root_path, get_data_path
+from src.core.config import get_root_path, get_data_path, require_authentication
 from src.core.helpers.video_helper import (
     crop_video_files,
     get_video_info,
@@ -44,6 +44,7 @@ st.set_page_config(
 
 # 加载样式和侧边栏
 load_custom_css()
+require_authentication()
 render_sidebar()
 
 # 页面标题和说明
@@ -68,6 +69,23 @@ with st.expander("💡 使用说明 / Instructions", expanded=True):
 root_directory = os.path.join(get_data_path(), 'video_crop')
 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 web_log_file_path = os.path.join(get_root_path(), 'logs', 'usage.txt')
+
+
+def get_invalid_crop_files(files, x_coord, y_coord, crop_width, crop_height):
+    invalid = []
+    for video_path in files:
+        info = get_video_info(video_path)
+        if not info:
+            invalid.append(os.path.basename(video_path))
+            continue
+        if (
+            x_coord < 0
+            or y_coord < 0
+            or x_coord + crop_width > info["width"]
+            or y_coord + crop_height > info["height"]
+        ):
+            invalid.append(f"{os.path.basename(video_path)} ({info['width']}x{info['height']})")
+    return invalid
 
 # 显示GPU状态和配置
 col1, col2 = st.columns(2)
@@ -154,31 +172,44 @@ if folder_path and selected_files:
     col7, col8 = st.columns(2)
     with col7:
         if st.button("📝 生成GPU裁剪脚本 / Generate GPU Crop Scripts", use_container_width=True):
-            try:
-                # 检查session_state中是否存在name
-                user_name = st.session_state.get('name', 'unknown_user')
-                
-                with open(web_log_file_path, "a", encoding='utf-8') as web_log_file:
-                    web_log_file.write(f"\n{user_name}, {current_time}, Generate GPU Crop Scripts\n")
-                
-                with st.spinner("生成脚本中 / Generating scripts..."):
-                    for video_path in selected_files:
-                        # 创建裁剪脚本
-                        script_path = create_extract_script(
-                            video_path=video_path,
-                            x=x, y=y,
-                            width=width,
-                            height=height,
-                            start=start_time,
-                            end=end_time,
-                            output_directory=folder_path,
-                            deviceID=selected_gpus[0]
+            if not selected_gpus:
+                st.error("未选择GPU / No GPU selected")
+            else:
+                if end_time <= start_time:
+                    st.error("结束时间必须大于开始时间 / End time must be greater than start time")
+                else:
+                    invalid_files = get_invalid_crop_files(selected_files, x, y, width, height)
+                    if invalid_files:
+                        st.error(
+                            "裁剪区域超出视频尺寸 / Crop area exceeds frame size: "
+                            + ", ".join(invalid_files)
                         )
-                        if script_path:
-                            st.success(f"✅ 脚本已生成 / Script generated: {os.path.basename(script_path)}")
-                st.success("✅ 所有裁剪脚本生成完成 / All crop scripts generated")
-            except Exception as e:
-                st.error(f"❌ 生成脚本失败 / Failed to generate scripts: {str(e)}")
+                    else:
+                        try:
+                            # 检查session_state中是否存在name
+                            user_name = st.session_state.get('name', 'unknown_user')
+                            
+                            with open(web_log_file_path, "a", encoding='utf-8') as web_log_file:
+                                web_log_file.write(f"\n{user_name}, {current_time}, Generate GPU Crop Scripts\n")
+                            
+                            with st.spinner("生成脚本中 / Generating scripts..."):
+                                for video_path in selected_files:
+                                    # 创建裁剪脚本
+                                    script_path = create_extract_script(
+                                        video_path=video_path,
+                                        x=x, y=y,
+                                        width=width,
+                                        height=height,
+                                        start=start_time,
+                                        end=end_time,
+                                        output_directory=folder_path,
+                                        deviceID=selected_gpus[0]
+                                    )
+                                    if script_path:
+                                        st.success(f"✅ 脚本已生成 / Script generated: {os.path.basename(script_path)}")
+                            st.success("✅ 所有裁剪脚本生成完成 / All crop scripts generated")
+                        except Exception as e:
+                            st.error(f"❌ 生成脚本失败 / Failed to generate scripts: {str(e)}")
     
     with col8:
         # 选择要执行的脚本
@@ -205,30 +236,40 @@ if folder_path and selected_files:
     col9, col10 = st.columns(2)
     with col9:
         if st.button("📝 生成CPU裁剪脚本 / Generate CPU Crop Scripts", use_container_width=True):
-            try:
-                # 检查session_state中是否存在name
-                user_name = st.session_state.get('name', 'unknown_user')
-                
-                with open(web_log_file_path, "a", encoding='utf-8') as web_log_file:
-                    web_log_file.write(f"\n{user_name}, {current_time}, Generate CPU Crop Scripts\n")
-                
-                with st.spinner("生成脚本中 / Generating scripts..."):
-                    for video_path in selected_files:
-                        # 创建裁剪脚本
-                        script_path = create_extract_script_CPU(
-                            video_path=video_path,
-                            x=x, y=y,
-                            width=width,
-                            height=height,
-                            start=start_time,
-                            end=end_time,
-                            output_directory=folder_path
-                        )
-                        if script_path:
-                            st.success(f"✅ 脚本已生成 / Script generated: {os.path.basename(script_path)}")
-                st.success("✅ 所有裁剪脚本生成完成 / All crop scripts generated")
-            except Exception as e:
-                st.error(f"❌ 生成脚本失败 / Failed to generate scripts: {str(e)}")
+            if end_time <= start_time:
+                st.error("结束时间必须大于开始时间 / End time must be greater than start time")
+            else:
+                invalid_files = get_invalid_crop_files(selected_files, x, y, width, height)
+                if invalid_files:
+                    st.error(
+                        "裁剪区域超出视频尺寸 / Crop area exceeds frame size: "
+                        + ", ".join(invalid_files)
+                    )
+                else:
+                    try:
+                        # 检查session_state中是否存在name
+                        user_name = st.session_state.get('name', 'unknown_user')
+                        
+                        with open(web_log_file_path, "a", encoding='utf-8') as web_log_file:
+                            web_log_file.write(f"\n{user_name}, {current_time}, Generate CPU Crop Scripts\n")
+                        
+                        with st.spinner("生成脚本中 / Generating scripts..."):
+                            for video_path in selected_files:
+                                # 创建裁剪脚本
+                                script_path = create_extract_script_CPU(
+                                    video_path=video_path,
+                                    x=x, y=y,
+                                    width=width,
+                                    height=height,
+                                    start=start_time,
+                                    end=end_time,
+                                    output_directory=folder_path
+                                )
+                                if script_path:
+                                    st.success(f"✅ 脚本已生成 / Script generated: {os.path.basename(script_path)}")
+                        st.success("✅ 所有裁剪脚本生成完成 / All crop scripts generated")
+                    except Exception as e:
+                        st.error(f"❌ 生成脚本失败 / Failed to generate scripts: {str(e)}")
     
     with col10:
         # 选择要执行的脚本

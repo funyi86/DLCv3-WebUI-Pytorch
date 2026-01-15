@@ -135,6 +135,19 @@ def analyze_bout_duration(position_data, min_duration, max_duration):
                 start_frame = i
                 current_area = area
                 
+    if start_frame is not None:
+        duration = len(position_data['valid_frames']) - start_frame
+        if min_duration <= duration <= max_duration:
+            last_idx = len(position_data['valid_frames']) - 1
+            bouts.append({
+                'start_frame': start_frame,
+                'end_frame': len(position_data['valid_frames']),
+                'duration': duration,
+                'area': current_area,
+                'center_x': float(position_data['center_x'][last_idx]),
+                'center_y': float(position_data['center_y'][last_idx])
+            })
+
     return bouts
 
 def save_results(results, output_path):

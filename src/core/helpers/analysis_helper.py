@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
@@ -77,15 +78,16 @@ def create_and_start_analysis(
                 handle.write(run_content)
 
             start_content = (
-                "import subprocess\n\n"
-                f"subprocess.run(['python', r'{run_py_path}'], check=True)\n"
+                "import subprocess\n"
+                "import sys\n\n"
+                f"subprocess.run([sys.executable, r'{run_py_path}'], check=True)\n"
             )
             with open(start_script_path, "w", encoding="utf-8") as handle:
                 handle.write(start_content)
 
             with open(log_file_path, "w", encoding="utf-8") as log_file:
                 process = subprocess.Popen(
-                    ["python", start_script_path],
+                    [sys.executable, start_script_path],
                     stdout=log_file,
                     stderr=subprocess.STDOUT,
                     text=True,

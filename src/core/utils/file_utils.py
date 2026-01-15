@@ -2,6 +2,23 @@ import os
 import streamlit as st
 from typing import List, Optional
 
+def sanitize_filename(filename: str) -> str:
+    """Normalize a filename to a safe basename."""
+    name = os.path.basename(filename).strip()
+    if name in ("", ".", ".."):
+        raise ValueError("Invalid filename")
+    return name
+
+def safe_join(root: str, *paths: str) -> str:
+    """Join paths and ensure the result stays within root."""
+    root_abs = os.path.abspath(root)
+    root_real = os.path.realpath(root_abs)
+    candidate = os.path.abspath(os.path.join(root_abs, *paths))
+    candidate_real = os.path.realpath(candidate)
+    if os.path.commonpath([root_real, candidate_real]) != root_real:
+        raise ValueError("Unsafe path")
+    return candidate
+
 def create_new_folder(folder_path: str) -> bool:
     """创建新文件夹
     Create a new folder
@@ -38,11 +55,16 @@ def upload_files(folder_path: str) -> List[str]:
 
         if uploaded_files:
             for uploaded_file in uploaded_files:
-                file_path = os.path.join(folder_path, uploaded_file.name)
+                try:
+                    safe_name = sanitize_filename(uploaded_file.name)
+                    file_path = safe_join(folder_path, safe_name)
+                except ValueError:
+                    st.error(f"文件名不合法 / Invalid filename: {uploaded_file.name}")
+                    continue
                 with open(file_path, "wb") as file_handle:
                     file_handle.write(uploaded_file.getbuffer())
                 saved_files.append(file_path)
-                st.success(f"文件上传成功 / File uploaded successfully: {uploaded_file.name}")
+                st.success(f"文件上传成功 / File uploaded successfully: {safe_name}")
         return saved_files
     except Exception as e:
         st.error(f"文件上传失败 / Failed to upload files: {str(e)}")

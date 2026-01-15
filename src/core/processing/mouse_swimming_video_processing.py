@@ -122,8 +122,11 @@ def calculate_body_angles(coords):
         (head_body[0]**2 + head_body[1]**2) *
         (body_tail[0]**2 + body_tail[1]**2)
     )
-    
-    angles = np.arccos(dot_product / magnitudes)
+
+    cos_angle = np.ones_like(dot_product, dtype=float)
+    np.divide(dot_product, magnitudes, out=cos_angle, where=magnitudes != 0)
+    cos_angle = np.clip(cos_angle, -1.0, 1.0)
+    angles = np.arccos(cos_angle)
     return np.degrees(angles)
 
 def analyze_bout_duration(swimming_frames, min_duration, max_duration):
@@ -156,6 +159,15 @@ def analyze_bout_duration(swimming_frames, min_duration, max_duration):
                 })
             start_frame = None
             
+    if start_frame is not None:
+        duration = len(swimming_frames) - start_frame
+        if min_duration <= duration <= max_duration:
+            bouts.append({
+                'start_frame': start_frame,
+                'end_frame': len(swimming_frames),
+                'duration': duration
+            })
+
     return bouts
 
 def save_results(results, output_path):

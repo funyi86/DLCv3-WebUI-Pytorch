@@ -1,0 +1,11 @@
+# Runtime outputs
+logs/
+data/
+models/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local config (contains real credentials)
+src/core/config/config.local.yaml

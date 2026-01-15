@@ -8,7 +8,7 @@ if root_dir not in sys.path:
 
 import streamlit as st
 import datetime
-from src.core.config import get_root_path, get_data_path
+from src.core.config import get_root_path, get_data_path, require_authentication
 from src.core.helpers.video_combiner import create_video_combination_script
 from src.core.utils.execute_selected_scripts import execute_selected_scripts, fetch_last_lines_of_logs
 from src.core.utils.file_utils import list_directories, upload_files, select_video_files
@@ -24,6 +24,7 @@ st.set_page_config(
 
 # 加载样式和侧边栏
 load_custom_css()
+require_authentication()
 render_sidebar()
 
 # 页面标题和说明
@@ -83,6 +84,7 @@ if video_files:
                     first_video = os.path.splitext(os.path.basename(video_files[0]))[0]
                     last_video = os.path.splitext(os.path.basename(video_files[-1]))[0]
                     combined_video_name = f"{first_video}_to_{last_video}_combined.mp4"
+                    st.session_state["combined_video_name"] = combined_video_name
                     
                     # 创建合并视频的脚本
                     script_path = create_video_combination_script(
@@ -122,18 +124,22 @@ if video_files:
                             os.makedirs(target_directory)
                         
                         # 移动合并后的视频到目标目录
-                        for script_name in selected_scripts:
-                            # 从脚本名称推断合并后的视频名称
-                            script_base = os.path.splitext(script_name)[0]
-                            combined_video_name = f"{script_base}_combined.mp4"
-                            combined_video_path = os.path.join(folder_path, combined_video_name)
-                            
-                            if os.path.exists(combined_video_path):
-                                import shutil
-                                shutil.move(combined_video_path, os.path.join(target_directory, combined_video_name))
-                                st.success(f"✅ 视频已合并并移动到裁剪目录 / Video combined and moved to crop directory: {combined_video_name}")
+                        if "combine_videos.py" in selected_scripts:
+                            combined_video_name = st.session_state.get("combined_video_name")
+                            if not combined_video_name and video_files:
+                                first_video = os.path.splitext(os.path.basename(video_files[0]))[0]
+                                last_video = os.path.splitext(os.path.basename(video_files[-1]))[0]
+                                combined_video_name = f"{first_video}_to_{last_video}_combined.mp4"
+                            if combined_video_name:
+                                combined_video_path = os.path.join(folder_path, combined_video_name)
+                                if os.path.exists(combined_video_path):
+                                    import shutil
+                                    shutil.move(combined_video_path, os.path.join(target_directory, combined_video_name))
+                                    st.success(f"✅ 视频已合并并移动到裁剪目录 / Video combined and moved to crop directory: {combined_video_name}")
+                                else:
+                                    st.error(f"❌ 合并后的视频文件未找到 / Combined video file not found: {combined_video_name}")
                             else:
-                                st.error(f"❌ 合并后的视频文件未找到 / Combined video file not found: {combined_video_name}")
+                                st.error("❌ 未找到合并视频名称 / Combined video name not found")
                         
                 except Exception as e:
                     st.error(f"❌ 执行脚本失败 / Failed to execute scripts: {str(e)}")

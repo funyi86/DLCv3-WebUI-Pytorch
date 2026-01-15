@@ -1,35 +1,15 @@
+# Sample config. Copy to config.local.yaml and replace CHANGE_ME values.
 credentials:
   usernames:
-    guanly:
-      email: guanly@szbl.ac.cn
-      name: Liangyu Guan
-      password: guan
-    yangyh:
-      email: yangyh@szbl.ac.cn
-      name: Yanhong Yang
-      password: yang
-    zhouyl:
-      email: zhouyl@szbl.ac.cn
-      name: Yulong Zhou
-      password: zhou
-    luoxj:
-      email: luoxj@szbl.ac.cn
-      name: luoxj
-      password: luo
-    liyj:
-      email: liyj@szbl.ac.cn
-      name: liyj
-      password: li
-    taozhiyin:
-      email: taozhiyin@szbl.ac.cn
-      name: taozhiyin
-      password: tao
-      
+    demo:
+      email: demo@example.com
+      name: Demo User
+      password: CHANGE_ME
+
 cookie:
   expiry_days: 30
-  key: "dlc_webui_key_123"
-  name: "dlc_webui_cookie_123"
+  key: "CHANGE_ME"
+  name: "dlc_webui_cookie"
+
 preauthorized:
-  emails:
-  - guanly@szbl.ac.cn
-  
+  emails: []

@@ -9,6 +9,7 @@ def setup_logging() -> None:
     设置日志系统
     Setup logging system
     """
+    os.makedirs('logs', exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',

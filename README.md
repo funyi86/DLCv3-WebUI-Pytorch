@@ -34,7 +34,8 @@
    ```
    脚本会创建 Conda + mamba 环境并安装运行所需依赖，如需开发工具可追加 `pip install -e .[dev]`。
 3. **配置认证与路径 / Configure auth & paths**
-   - 复制 `src/core/config/config.yaml` 并填入用户名、密码哈希和数据目录。
+   - 运行 `python scripts/init_config.py` 生成 `src/core/config/config.local.yaml`（含密码哈希与 cookie key）。
+   - 或设置环境变量 `DLC_WEBUI_CONFIG` 指向你的配置文件路径。
    - 设置 `data/`、`models/`、`logs/` 至本地大容量磁盘，避免提交到 Git。
 4. **运行应用 / Run the app**
    ```bash
@@ -43,7 +44,7 @@
    浏览器访问 `http://localhost:8501`。若调试单一页面：`streamlit run pages/<page>.py`。
 
 ## 功能矩阵 / Feature Matrix
-- **用户登录 / Authentication**：基于 `streamlit-authenticator`，集中配置于 `config.yaml`。
+- **用户登录 / Authentication**：基于 `streamlit-authenticator`，集中配置于 `config.local.yaml` 或 `DLC_WEBUI_CONFIG`。
 - **GPU 管理 / GPU manager**：调用 `GPUtil` 监控显卡状态，支持在界面中选择推理设备。
 - **视频预处理 / Video preprocessing**：封装裁剪、拼接、帧抽取等操作，兼容多实验范式。
 - **行为分析 / Behavioral analysis**：抓挠、理毛、游泳、三箱、双鼠社交、条件位置偏好（CPP）、抓取等流程。
@@ -88,7 +89,7 @@ DLCv3-WebUI-Pytorch/
 扩展新模块时更新对应 `__init__.py` 并保持跨层依赖最小化。
 
 ## 配置与数据 / Configuration & Data
-- `src/core/config/config.yaml` 示例包含认证、根目录、数据/模型路径等；生产环境请使用环境变量或本地忽略文件存放真实凭据。
+- `src/core/config/config.yaml` 为示例模板（含 `CHANGE_ME` 占位符）；请复制为 `src/core/config/config.local.yaml` 或通过 `DLC_WEBUI_CONFIG` 指定真实配置。
 - 数据与模型分别放在 `data/`、`models/`，保持在 Git ignore 范围内。
 - 日志输出位于 `logs/`，通过 `src/core/logging` 统一管理，可自定义保留策略。
 

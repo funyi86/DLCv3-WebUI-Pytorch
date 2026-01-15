@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import datetime
-from src.core.config import get_root_path, get_data_path, get_models_path
+from src.core.config import get_root_path, get_data_path, get_models_path, require_authentication
 from src.core.helpers.analysis_helper import create_and_start_analysis, fetch_last_lines_of_logs
 from src.core.helpers.download_utils import filter_and_zip_files
 from src.core.processing.mouse_social_video_processing import process_mouse_social_video
@@ -30,6 +30,7 @@ config.set_option('server.maxUploadSize', 40960)  # 设置为40GB (40 * 1024 MB)
 
 # 加载样式和侧边栏
 load_custom_css()
+require_authentication()
 render_sidebar()
 
 # 页面标题和说明
@@ -106,8 +107,9 @@ with tab1:
         if folder_path and selected_files:  # 只在有选择文件时显示开始分析按钮
             if st.button("🚀 开始GPU分析 / Start GPU Analysis", use_container_width=True):
                 try:
+                    user_name = st.session_state.get('name', 'unknown_user')
                     with open(web_log_file_path, "a", encoding='utf-8') as web_log_file:
-                        web_log_file.write(f"\n{st.session_state['name']}, {current_time}\n")
+                        web_log_file.write(f"\n{user_name}, {current_time}\n")
                     create_and_start_analysis(folder_path, selected_files, config_path, gpu_count, current_time, selected_gpus)
                     st.success("✅ 分析已开始！请查看日志了解进度 / Analysis started! Check logs for progress.")
                 except Exception as e:

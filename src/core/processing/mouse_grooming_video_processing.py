@@ -133,6 +133,15 @@ def analyze_bout_duration(grooming_frames, min_duration, max_duration):
                 })
             start_frame = None
             
+    if start_frame is not None:
+        duration = len(grooming_frames) - start_frame
+        if min_duration <= duration <= max_duration:
+            bouts.append({
+                'start_frame': start_frame,
+                'end_frame': len(grooming_frames),
+                'duration': duration
+            })
+
     return bouts
 
 def save_results(results, output_path):
