@@ -21,13 +21,25 @@ def create_and_start_analysis(
     """Spawn DeepLabCut analysis jobs across the requested GPUs."""
     try:
         gpu_indices = list(range(gpu_count)) if selected_gpus is None else list(selected_gpus)
+        use_cpu = False
         if not gpu_indices:
-            st.error("❌ 未检测到可用 GPU / No GPUs available for analysis")
-            return
+            use_cpu = True
+            if gpu_count <= 0:
+                st.warning(
+                    "⚠️ 未检测到可用 GPU，将使用 CPU 运行 / No GPUs detected. Falling back to CPU."
+                )
+            else:
+                st.warning(
+                    "⚠️ 未选择 GPU，将使用 CPU 运行 / No GPUs selected. Falling back to CPU."
+                )
+            gpu_indices = [0]
 
-        st.write(
-            f"调试信息 / Debug: {len(selected_files)} 个文件使用 {len(gpu_indices)} 个GPU"
-        )
+        if use_cpu:
+            st.write(f"调试信息 / Debug: {len(selected_files)} 个文件使用 CPU")
+        else:
+            st.write(
+                f"调试信息 / Debug: {len(selected_files)} 个文件使用 {len(gpu_indices)} 个GPU"
+            )
 
         if len(selected_files) < len(gpu_indices):
             st.warning(
@@ -49,7 +61,7 @@ def create_and_start_analysis(
             file_groups.append(selected_files[start:end])
             start = end
 
-        processes: List[Tuple[subprocess.Popen, int]] = []
+        processes: List[Tuple[subprocess.Popen, str]] = []
 
         for group_num, files_group in enumerate(file_groups):
             if not files_group:
@@ -60,11 +72,18 @@ def create_and_start_analysis(
             start_script_path = os.path.join(folder_path, f"start_analysis_gpu{gpu_index}.py")
             log_file_path = os.path.join(folder_path, f"output_gpu{gpu_index}.log")
 
-            analyze_videos_code = (
-                f"deeplabcut.analyze_videos(r'{config_path}', {files_group}, "
-                "videotype='mp4', shuffle=1, trainingsetindex=0, "
-                f"gputouse={gpu_index}, save_as_csv=True)"
-            )
+            if use_cpu:
+                analyze_videos_code = (
+                    f"deeplabcut.analyze_videos(r'{config_path}', {files_group}, "
+                    "videotype='mp4', shuffle=1, trainingsetindex=0, "
+                    "save_as_csv=True)"
+                )
+            else:
+                analyze_videos_code = (
+                    f"deeplabcut.analyze_videos(r'{config_path}', {files_group}, "
+                    "videotype='mp4', shuffle=1, trainingsetindex=0, "
+                    f"gputouse={gpu_index}, save_as_csv=True)"
+                )
             create_labeled_video_code = (
                 f"deeplabcut.create_labeled_video(r'{config_path}', {files_group})"
             )
@@ -93,24 +112,25 @@ def create_and_start_analysis(
                     text=True,
                     cwd=folder_path,
                 )
-                processes.append((process, gpu_index))
+                device_label = "CPU" if use_cpu else f"GPU {gpu_index}"
+                processes.append((process, device_label))
 
             st.success(
-                f"✅ 已在GPU {gpu_index}上启动分析任务 / Analysis task started on GPU {gpu_index}"
+                f"✅ 已在{device_label}上启动分析任务 / Analysis task started on {device_label}"
             )
 
-        for process, gpu_index in processes:
+        for process, device_label in processes:
             process.wait()
             if process.returncode != 0:
                 st.error(
-                    f"❌ GPU {gpu_index}上的分析任务出错 / Error encountered while running analysis on GPU {gpu_index}"
+                    f"❌ {device_label}上的分析任务出错 / Error encountered while running analysis on {device_label}"
                 )
 
         general_log_path = os.path.join(folder_path, "general_log.txt")
         with open(general_log_path, "a", encoding="utf-8") as general_log:
-            for _, gpu_index in processes:
+            for _, device_label in processes:
                 general_log.write(
-                    f"[{current_time}] 在GPU {gpu_index}上启动了分析 / Analysis started on GPU {gpu_index}\n"
+                    f"[{current_time}] 在{device_label}上启动了分析 / Analysis started on {device_label}\n"
                 )
 
     except Exception as exc:  # pragma: no cover - operational logging
@@ -127,7 +147,8 @@ def fetch_last_lines_of_logs(
     last_lines: Dict[str, str] = {}
     encodings = ["utf-8", "gbk", "gb2312", "iso-8859-1"]
 
-    for group_num in range(gpu_count):
+    group_total = gpu_count if gpu_count > 0 else 1
+    for group_num in range(group_total):
         log_file_path = os.path.join(folder_path, f"output_gpu{group_num}.log")
         content = f"未找到日志文件 / Log file not found: {log_file_path}"
 
