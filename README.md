@@ -79,6 +79,8 @@
    - 运行 `python scripts/init_config.py` 生成 `src/core/config/config.local.yaml`（含密码哈希与 cookie key）。
    - 或设置环境变量 `DLC_WEBUI_CONFIG` 指向你的配置文件路径。
    - 设置 `data/`、`models/`、`logs/` 至本地大容量磁盘，避免提交到 Git。
+3. **macOS CPU-only 指南 / macOS CPU-only guide**
+   - 见 `docs/guides/installation.md` 的 “macOS CPU-only Quick Start” 章节。
 4. **运行应用 / Run the app**
    ```bash
    streamlit run Home.py
