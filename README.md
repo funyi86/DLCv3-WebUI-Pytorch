@@ -2,7 +2,17 @@
 
 基于 DeepLabCut 的小鼠行为分析 Streamlit 界面 / Streamlit interface for DeepLabCut-based mouse behavior analysis
 
+## ⚠️ 科学注意事项 / Scientific Notes (Read First)
+- 当前部分行为判定依赖固定像素阈值与几何假设，必须结合实验装置标定（像素↔厘米、ROI、fps）与人工标注验证后再用于结论。
+- 三箱实验目前用“爪-尾距离 < 40px”做检测，与常见三箱社交/室内占据指标不一致，结果仅供参考。
+- CPP 使用固定中线 375px 且仅统计 15–35 帧停留，可能在分辨率变化时反转分区并截断真实停留时长。
+- 理毛/抓挠基于像素距离与短时段筛选，未做体长归一化或节律性判据，可能误判或漏判。
+- 游泳以躯干弯曲角阈值与 15–35 帧时长定义“游泳”，不等同于强迫游泳的常规运动/静止指标。
+- 双鼠社交固定 100px/45° 阈值且图表默认 30fps，跨相机设置需重新校准。
+- 抓取行为依赖固定 ROI 与 x 方向位移/速度，强依赖装置几何与拍摄角度。
+
 ## 目录 / Table of Contents
+- [科学注意事项 / Scientific Notes (Read First)](#科学注意事项--scientific-notes-read-first)
 - [概览 / Overview](#概览--overview)
 - [快速上手 / Quickstart](#快速上手--quickstart)
 - [功能矩阵 / Feature Matrix](#功能矩阵--feature-matrix)
