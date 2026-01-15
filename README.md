@@ -22,9 +22,29 @@
 - 双鼠社交 / Two-Social：鼻-鼻或鼻-体距离 <2–4cm（或 0.5–1.0 BL）；朝向阈值 45–60°；最小片段 1–2s；间隔合并 ≤0.5s。
 - 抓取 / Catch：ROI 均以标定坐标定义；最小持续 0.1–0.3s；最小事件间隔 0.5–1.0s；轨迹距离与速度使用 2D 路径长度（cm/s）。
 
+## 实验清单 / Experiment Checklist
+- 标定：记录像素↔厘米比例、fps、相机角度；按装置尺寸标定 ROI（含刺激区/中线/禁入带）。
+- 关键点质量：人工抽检并统计帧内关键点置信度分布；推荐中位数 ≥0.9，低置信度帧占比 ≤10%。
+- 行为定义：明确行为起止判据（距离/速度/朝向/停留时长），并统一单位（cm 或 BL）。
+- 参数校准：用标注子集做阈值扫描（距离、速度、最小时长、合并间隔），选取能最大化一致性的组合。
+- 结果报告：固定输出单位、阈值、ROI 与视频条件；保留标注集与参数版本号。
+
+## 回归测试清单 / Regression Test Checklist
+以下为建议的初始验收目标（可根据实验与装置调整）。
+- 通用一致性：在固定标注集上，事件级 F1 ≥0.75，持续时间中位误差 ≤0.3s。
+- 三箱 / Three-Chamber：各区域停留时长与标注一致性 R ≥0.85；进入次数偏差 ≤10%。
+- CPP：偏好指数误差 ≤0.1；drug/saline 停留时长偏差 ≤10%。
+- 理毛 / Grooming：事件级 F1 ≥0.8；片段持续时间误差 ≤0.5s。
+- 抓挠 / Scratch：事件频率偏差 ≤15%；每分钟计数相关性 R ≥0.8。
+- 游泳 / Forced Swim：不动时间总量偏差 ≤10%；分钟级相关性 R ≥0.8。
+- 双鼠社交 / Two-Social：interaction/proximity 时长偏差 ≤10%；事件级 F1 ≥0.75。
+- 抓取 / Catch：事件级 F1 ≥0.75；轨迹长度误差 ≤10%；峰值高度误差 ≤0.3cm。
+
 ## 目录 / Table of Contents
 - [科学注意事项 / Scientific Notes (Read First)](#科学注意事项--scientific-notes-read-first)
 - [建议参数起点 / Suggested Parameters (Starting Points)](#建议参数起点--suggested-parameters-starting-points)
+- [实验清单 / Experiment Checklist](#实验清单--experiment-checklist)
+- [回归测试清单 / Regression Test Checklist](#回归测试清单--regression-test-checklist)
 - [概览 / Overview](#概览--overview)
 - [快速上手 / Quickstart](#快速上手--quickstart)
 - [功能矩阵 / Feature Matrix](#功能矩阵--feature-matrix)
